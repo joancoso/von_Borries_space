@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 # load the training set
-von_borries_space = pd.read_csv("input_data\\kerstin_fingerprints.csv")
+von_borries_space = pd.read_csv("input_data/kerstin_fingerprints.csv")
 print(von_borries_space.isna().sum())
 print(von_borries_space.shape)
 
@@ -67,7 +67,7 @@ print("done!")
 
 
 # Load the dataset of interest
-target_space = pd.read_csv("input_data\\mfps_WWTP_combined_data.tsv", sep="\t")
+target_space = pd.read_csv("input_data/mfps_WWTP_combined_data.tsv", sep="\t")
 target_space_fingerprints = np.array(target_space.drop(columns='CanonicalSMILES')).astype('bool')
 print(target_space_fingerprints)
 
@@ -84,5 +84,5 @@ ax = sns.scatterplot(data=target_chemicals_space, x='tsne_v1', y='tsne_v2',
 ax.legend(loc='upper left', bbox_to_anchor=(1.00, 0.75), ncol=1)
 # ax.set(xlim=[-200, 200], ylim=[-200, 200])
 plt.axis('off')
-plt.savefig('output\\target_space_static_test.tif', bbox_inches='tight', dpi=1800)
+plt.savefig('output/target_space_static_test.tif', bbox_inches='tight', dpi=1800)
 plt.close()
