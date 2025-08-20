@@ -1,5 +1,6 @@
 backup_old_files/
-.venv.venv/
+.venv
+.venv/
 temp/
 .idea/
 *.npy
