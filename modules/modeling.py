@@ -34,6 +34,7 @@ def load_pickle(path):
 # -----------------------------
 # Preprocessing
 # -----------------------------
+# Do we really need this function actually? It is just a few lines of code.
 def load_training_space(csv_path="input_data/kerstin_fingerprints.csv",
                         cache_path="temp/Xsmall_bool.npy",
                         use_subset=True, subset_n=6000):
