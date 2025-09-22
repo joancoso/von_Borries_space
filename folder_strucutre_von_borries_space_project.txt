@@ -1,0 +1,22 @@
+
+
+- Data
+	- smiles? list
+	- calculated features?
+	- classyfiers classes?  
+- Code
+	- script: Training? load_smiles, get_class, get_features, train_model
+	- script Transform? load_smiles, get_class, get_features, transform
+
+- Models
+- Modules (supporting functions)
+	- preprocessing
+	- modeling?
+	- visualisation?  
+- app.py -> loads the coordinates (w class), runs/predict/use the trained object to get coordinates for new chemicals, also calculate descs and classes for new chemicals, visualize everyhting
+- requirements
+- readme
+- tutorial notebook?
+- test ?
+- output? results? 
+- 
