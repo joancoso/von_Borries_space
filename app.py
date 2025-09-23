@@ -14,13 +14,13 @@ def main():
 
     # Dropdown menu for selecting a molecule
     endpoints = ['Standard', 'PFAS_space']
-    model_selected_from_box = st.selectbox('Choose endpoint to predict',
+    reference_space = st.selectbox('Choose reference space',
                                      placeholder='Choose an option',
                                      index=None,
                                      options=endpoints)
 
     # Upload CSV file
-    uploaded_file = st.file_uploader("Upload a CSV file with chemical substance data", type="csv")
+    users_target_chemicals = st.file_uploader("Upload a CSV file with your chemical substances of interest", type="csv")
 
     @st.cache_data
     def convert_df(df):
@@ -36,37 +36,49 @@ def main():
         mime="text/csv",
     )
 
-    if uploaded_file is not None:
+    if users_target_chemicals is not None:
         # Load the uploaded data
-        input_data = pd.read_csv(uploaded_file)
+        users_target_chemicals = pd.read_csv(users_target_chemicals)
 
         # Show the input data
-        st.write("Uploaded data:", input_data)
+        st.write("Uploaded data:", users_target_chemicals)
 
-        print('Start predictions')
+        from modules.preprocessing import calculate_descriptors_morgan_df
+        morgan_df = calculate_descriptors_morgan_df(df=users_target_chemicals, col_smiles="SMILES")
+        st.write("Morgan Fingerprints:", morgan_df)
 
-        with st.spinner("Prediction is running...", show_time=True):
+        print('Project substances')
+
+        with st.spinner("Projecting your substances of interest", show_time=True):
             time.sleep(3)
 
-            if model_selected_from_box == 'Standard':
-                from modules.preprocessing import calculate_descriptors_morgan_df
-                smiles_df = calculate_descriptors_morgan_df(df=input_data, col_smiles="SMILES")
-                st.write("SMILES data:", smiles_df)
-            elif model_selected_from_box == 'PFAS_space':
-                pass  # Placeholder for future implementation
+            if reference_space == 'Standard':
+                # Show the coordinates data
+                coordinates_df = pd.read_csv(os.path.join('data', 'data_market_tsne.csv'))
+                # st.write("Coordinates data:", coordinates_df)
+                from modules.visualizing import chemical_space_plot_grey
+                fig_grey = chemical_space_plot_grey(coordinates_df)
+                #fig_color = chemical_space_plot()  @TODO: I will check later because we need to specify hue_column and so on
+                st.write(fig_grey)
+
+                # Load the trained object
+                # Transform the user to the reference space of interest. 
+
+            elif reference_space == 'PFAS_NIST':
+                st.write("We will soon provide the PFAS reference space")
+                #@TODO: just load the PFAS coordinates? 
             else:
                 st.write("Please choose an option")
 
 
-        # Show the coordinates data
-        coordinates_df = pd.read_csv(os.path.join('data', 'data_market_tsne.csv'))
-        st.write("Coordinates data:", coordinates_df)
-        from modules.visualizing import chemical_space_plot_grey
-        fig_grey = chemical_space_plot_grey(coordinates_df)
-        #fig_color = chemical_space_plot()  @TODO: I will check later because we need to specify hue_column and so on
         
 
-        st.write(fig_grey)
+
+
+
+
+
+
 
         st.success("Done!")
 
