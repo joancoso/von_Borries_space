@@ -3,3 +3,4 @@ backup_old_files/
 temp/
 .idea/
 *.npy
+.vscode

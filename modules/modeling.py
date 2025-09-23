@@ -29,36 +29,7 @@ def save_pickle(obj, path):
 def load_pickle(path):
     with open(path, "rb") as f:
         return pickle.load(f)
-
-
-# -----------------------------
-# Preprocessing
-# -----------------------------
-# Do we really need this function actually? It is just a few lines of code.
-def load_training_space(csv_path="input_data/kerstin_fingerprints.csv",
-                        cache_path="temp/Xsmall_bool.npy",
-                        use_subset=True, subset_n=6000):
-    """
-    Loads the von Borries training fingerprints, converts to bool,
-    optionally subsets, and caches the boolean array.
-    """
-    if os.path.exists(cache_path):
-        Xsmall = np.load(cache_path, allow_pickle=False)
-        print(f"[cache] Loaded training array from {cache_path} with shape {Xsmall.shape}")
-        return Xsmall
-
-    von_borries_space = pd.read_csv(csv_path)
-    print(von_borries_space.isna().sum())
-    print(von_borries_space.shape)
-
-    X = np.array(von_borries_space.astype('bool'))
-    Xsmall = X[:subset_n] if use_subset else X
-    print(Xsmall)
-
-    np.save(cache_path, Xsmall, allow_pickle=False)
-    print(f"[cache] Saved training array to {cache_path}")
-    return Xsmall
-
+    
 
 # -----------------------------
 # Modeling
@@ -83,6 +54,10 @@ def fit_tsne_model(Xsmall,
         random_state=42,
         verbose=True,
     )
+
+    # These are the settings I usually use (Kerstin) - parameters we might want to review in particular: perplexity, n_iter (both during fitting and transforming)
+    # tsne = TSNE(n_components=2, perplexity=100, n_iter=2000, learning_rate='auto', neighbors='pynndescent', 
+    #         initialization='pca', metric='jaccard', random_state=42, verbose=3)
 
     print('start training')
     embedding_train = tsne.fit(Xsmall)  # Try Xsmall if it crashes due to memory issues
