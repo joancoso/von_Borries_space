@@ -1,12 +1,19 @@
+import plotly.express as px
+import os
+import pandas as pd
 
-# This is the palette I used in my publication for the top 15 most common ClassyFire Superclasses + some code snippets
-palette = ['darkslategrey', 'teal', 'aquamarine', 'darkred', 'orangered', 'mediumpurple', 'darkorchid',
-            'mediumblue', 'royalblue', 'skyblue', 'darkgoldenrod', 'darkorange', 'gold',  'lightpink', 'hotpink',
-            'lightgrey']
+def get_color_class_mapping():
+    df_market_tsne = pd.read_csv(os.path.join('data', 'data_market_tsne.csv'))
+    # This is the palette I used in my publication for the top 15 most common ClassyFire Superclasses + some code snippets
+    palette = ['darkslategrey', 'teal', 'aquamarine', 'darkred', 'orangered', 'mediumpurple', 'darkorchid',
+                'mediumblue', 'royalblue', 'skyblue', 'darkgoldenrod', 'darkorange', 'gold',  'lightpink', 'hotpink',
+                'lightgrey']
 
-top15 = df_market_tsne.groupby('Superclass').count()['TSNE1'].sort_values(ascending=False).index[:15]
-df_market_tsne['Superclass (top 15)'] = df_market_tsne['Superclass'].where(df_market_tsne['Superclass'].isin(top15), 'Other')
-hue_order = top15.sort_values().to_list() + ['Other']
+    top15 = df_market_tsne.groupby('Superclass').count()['TSNE1'].sort_values(ascending=False).index[:15]
+    df_market_tsne['Superclass (top 15)'] = df_market_tsne['Superclass'].where(df_market_tsne['Superclass'].isin(top15), 'Other')
+    hue_order = top15.sort_values().to_list() + ['Other']
+
+    return palette, top15, hue_order
 
 
 def chemical_space_plot(df, hue_column, color_map, hover_name = 'PREFERRED_NAME', hover_data=['CASRN', 'Superclass', 'Class', 'Subclass'], train=False):
@@ -65,6 +72,8 @@ def chemical_space_plot(df, hue_column, color_map, hover_name = 'PREFERRED_NAME'
 
 # might be useful to keep overall space in background when embedding a new data set
 def chemical_space_plot_grey(df):
+    palette, top15, hue_order = get_color_class_mapping()
+    
     fig_grey = px.scatter(df, x="TSNE1", y="TSNE2", hover_name = 'PREFERRED_NAME', hover_data=['CASRN', 'Superclass', 'Class', 'Subclass'],
                     render_mode="webgl", height=700, width=1200)
 

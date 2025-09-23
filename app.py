@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import time
+import os
 
 def main():
 
@@ -8,8 +9,8 @@ def main():
     st.title("von Borries space of marketed chemicals")
 
     st.markdown("""
-This apps lets you visualize the space of marketed chemicals.  
-    """)
+                This apps lets you visualize the space of marketed chemicals.  
+                """)
 
     # Dropdown menu for selecting a molecule
     endpoints = ['Standard', 'PFAS_space']
@@ -25,7 +26,7 @@ This apps lets you visualize the space of marketed chemicals.
     def convert_df(df):
         # IMPORTANT: Cache the conversion to prevent computation on every rerun
         return df.to_csv().encode("utf-8")
-    example_csv = pd.read_csv('test_market_chemicals_space.csv')
+    example_csv = pd.read_csv(os.path.join('data','nist_potential_pfas_smiles.tsv'), sep='\t')
     csv = convert_df(example_csv)
 
     st.sidebar.download_button(
@@ -48,12 +49,24 @@ This apps lets you visualize the space of marketed chemicals.
             time.sleep(3)
 
             if model_selected_from_box == 'Standard':
-                from src.modeling import transform_target
-                space_coordinates_df = transform_target(input_data)
+                from modules.preprocessing import calculate_descriptors_morgan_df
+                smiles_df = calculate_descriptors_morgan_df(df=input_data, col_smiles="SMILES")
+                st.write("SMILES data:", smiles_df)
             elif model_selected_from_box == 'PFAS_space':
                 pass  # Placeholder for future implementation
             else:
                 st.write("Please choose an option")
+
+
+        # Show the coordinates data
+        coordinates_df = pd.read_csv(os.path.join('data', 'data_market_tsne.csv'))
+        st.write("Coordinates data:", coordinates_df)
+        from modules.visualizing import chemical_space_plot_grey
+        fig_grey = chemical_space_plot_grey(coordinates_df)
+        #fig_color = chemical_space_plot()  @TODO: I will check later because we need to specify hue_column and so on
+        
+
+        st.write(fig_grey)
 
         st.success("Done!")
 
