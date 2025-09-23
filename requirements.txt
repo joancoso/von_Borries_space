@@ -36,7 +36,7 @@ pynndescent==0.5.13
 pyparsing==3.2.3
 python-dateutil==2.9.0.post0
 pytz==2025.2
-pywin32==311
+# pywin32==311  # Only needed for Windows # Commented out for deploying in streamlit community
 pyzmq==27.0.0
 rdkit==2025.3.6
 scikit-learn==1.7.0
