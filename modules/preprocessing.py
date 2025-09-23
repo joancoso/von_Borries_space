@@ -186,7 +186,7 @@ def calculate_descriptors_morgan(smiles, **kwargs):
     smiles : str, mandatory
         The SMILES string
     **kwargs: optional
-        Pass in any arguments taken by rdkit.Chem.rdMolDescriptors.GetMorganFingerprintAsBitVect such as radius and nBits
+        Pass in any arguments taken by rdkit.Chem.rdMolDescriptors.GetMorganFingerprintAsBitVect such as radius and fpSize
 
     Outputs
     ----------
