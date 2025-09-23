@@ -4,3 +4,4 @@ temp/
 .idea/
 *.npy
 .vscode
+modules/__pycache__/
