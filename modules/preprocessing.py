@@ -74,8 +74,8 @@ def myMolFromSmiles(smiles):
     return mol
 
 
-def remove_chiral_centers(smiles):
-    """ Support function to remove chiral information from SMILES
+def remove_stereochemistry(smiles):
+    """ Support function to remove stereochemical information from SMILES
 
     Inputs
     ----------
@@ -85,51 +85,19 @@ def remove_chiral_centers(smiles):
     Outputs
     ----------
     res_smiles: str
-        SMILES string without chiral information
+        SMILES string without stereochemical information
 
     """
-    m = myMolFromSmiles(smiles)
-    if m is not None:
-        all_chiral = Chem.FindMolChiralCenters(m)
-        all_chiral_centers = [sublist[0] for sublist in all_chiral]
-        if len(all_chiral_centers) > 0:
-            for each in all_chiral_centers:
-                m.GetAtomWithIdx(each).SetChiralTag(Chem.ChiralType.CHI_UNSPECIFIED)
-        res_smiles = Chem.MolToSmiles(m)
+
+    mol = myMolFromSmiles(smiles)
+
+    if mol is None:
+        res_smiles = ""
     else:
-        res_smiles = smiles
+        Chem.RemoveStereochemistry(mol) 
+        res_smiles = Chem.MolToSmiles(mol)
 
     return res_smiles
-
-
-def remove_cis_trans(smiles):
-    """ Support function to remove cis/trans information from SMILES
-
-    Inputs
-    ----------
-    smiles : str, mandatory
-        SMILES string
-
-    Outputs
-    ----------
-    res_smiles: str
-        SMILES string without cis/trans information
-
-    """
-    m = myMolFromSmiles(smiles)
-    if m is not None:
-        for b in m.GetBonds():
-            if b.GetStereo() in {Chem.rdchem.BondStereo.STEREOE, Chem.rdchem.BondStereo.STEREOZ,
-                                 Chem.rdchem.BondStereo.STEREOCIS, Chem.rdchem.BondStereo.STEREOTRANS,
-                                 Chem.rdchem.BondStereo.STEREOANY}:
-                b.SetStereo(Chem.rdchem.BondStereo.STEREONONE)
-
-        res_smiles = Chem.MolToSmiles(m)
-    else:
-        res_smiles = smiles
-
-    return res_smiles
-
 
 
 def create_tautomer_smiles(smiles):
@@ -142,12 +110,11 @@ def create_tautomer_smiles(smiles):
 
     Outputs
     ----------
-    canonical_order_smiles : str
-        canonicalized ordered SMILES string
+    tautomer_smiles : str
+        tautomer SMILES string
 
     """
 
-    # order SMILES
     if myMolFromSmiles(smiles) is None:
         new_mol = None
     else:
@@ -166,8 +133,49 @@ def create_tautomer_smiles(smiles):
             print('No tautomerization:' + smiles)
 
 
-        canonical_order_smiles = Chem.MolToSmiles(new_mol)
-        return canonical_order_smiles
+        tautomer_smiles = Chem.MolToSmiles(new_mol)
+        return tautomer_smiles
+
+
+def standardize_smiles(smiles, tautomerize=False):
+    """ Wrapper function that standardizes SMILES by removing stereochemistry and optional tautomerizing 
+    Inputs
+    ----------
+    smiles : str, mandatory
+        The SMILES string
+
+    Outputs
+    ----------
+    smiles_std: str,
+        The standardized SMILES string
+    """ 
+    if tautomerize:
+        smiles = create_tautomer_smiles(smiles)
+
+    smiles_std = remove_stereochemistry(smiles)
+
+    return smiles_std
+
+
+def standardize_smiles_df(df, col_smiles, **kwargs):
+    """ Wrapper function that calculates Morgan fingerprints for a series of SMILES
+
+    Inputs
+    ----------
+    df : pandas dataframe, mandatory
+        The dataframe containing the series of SMILES
+    col_smiles: string, mandatory
+        The column name containing the SMILES
+    **kwargs: optional
+        Pass in any arguments taken by rdkit.Chem.rdMolDescriptors.GetMorganFingerprintAsBitVect such as radius and nBits
+
+    Outputs
+    ----------
+    series of standardized SMILES
+    """
+
+    smiles_df = df[col_smiles].apply(standardize_smiles, **kwargs)
+    return smiles_df
 
 
 def calculate_descriptors_morgan(smiles, **kwargs):
@@ -185,7 +193,7 @@ def calculate_descriptors_morgan(smiles, **kwargs):
     array of calculated Morgan fingerprints
     """
 
-    mol = AllChem.MolFromSmiles(smiles)
+    mol = myMolFromSmiles(smiles)
     gen = rdFingerprintGenerator.GetMorganGenerator(**kwargs)
     fp = gen.GetFingerprint(mol)
     arr = np.zeros((fp.GetNumBits(),), dtype=bool)
