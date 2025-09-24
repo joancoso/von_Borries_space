@@ -5,6 +5,8 @@ import pandas as pd
 from openTSNE.tsne import TSNE
 import matplotlib.pyplot as plt
 import seaborn as sns
+from preprocessing import *
+from zipfile import ZipFile
 
 ### Some comments:
 # - Xsmall is just a smaller subset of the training data to make some steps faster
@@ -36,35 +38,63 @@ def load_pickle(path):
 # -----------------------------
 
 
-def fit_tsne_model(Xsmall,
-                   model_cache_path="temp/open_tsne_trained.pkl"):
+def fit_tsne_model(X, model_cache_path="open_tsne_trained.pkl"):
     """
-    Fits the TSNE model on the boolean fingerprint array (Xsmall) and saves the fitted embedding object.
-    If the pickled object extists, it is loaded instead of training again. 
+    Fits the TSNE model on the boolean fingerprint array (X) and saves the fitted embedding object.
+    If the pickled object extists, it is loaded instead of training again.
     """
-    if os.path.exists(model_cache_path):
-        print(f"[cache] Loading fitted TSNE embedding from {model_cache_path}")
-        return load_pickle(model_cache_path)
+    model_cache_path = os.path.join("..", "output", model_cache_path)
 
     # @TODO: I would prefer to store all params in a config file
-    tsne = TSNE(
-        perplexity=100,
-        n_iter=2000,
-        metric='euclidean',
-        random_state=42,
-        verbose=True,
-    )
+    # Define hyperparameters of t-SNE
+    hyperparameters_dict = {
+        'n_components': 2,
+        'perplexity': 100,  # default is 30
+        'learning_rate': 'auto',
+        'early_exaggeration_iter': 250,
+        'early_exaggeration': 'auto',
+        'n_iter': 2000,  # Default is 500
+        'exaggeration': None,
+        'dof': 1,
+        'theta': 0.5,
+        'n_interpolation_points': 3,
+        'min_num_intervals': 50,
+        'ints_in_interval': 1,
+        'initialization': "pca",
+        'metric': "jaccard",  # deafult is euclidean
+        'metric_params': None,
+        'initial_momentum': 0.8,
+        'final_momentum': 0.8,
+        'max_grad_norm': None,
+        'max_step_norm': 5,
+        'n_jobs': 1,
+        'neighbors': 'auto',  # the default is auto
+        'negative_gradient_method': 'auto',
+        'callbacks': None,
+        'callbacks_every_iters': 50,
+        'random_state': None,
+        'verbose': True,
+        'random_state': 42,
+    }
 
     # These are the settings I usually use (Kerstin) - parameters we might want to review in particular: perplexity, n_iter (both during fitting and transforming)
-    # tsne = TSNE(n_components=2, perplexity=100, n_iter=2000, learning_rate='auto', neighbors='pynndescent', 
+    # tsne = TSNE(n_components=2, perplexity=100, n_iter=2000, learning_rate='auto', neighbors='pynndescent',
     #         initialization='pca', metric='jaccard', random_state=42, verbose=3)
 
+    # Training
     print('start training')
-    embedding_train = tsne.fit(Xsmall)  # Try Xsmall if it crashes due to memory issues
+    tsne = TSNE(**hyperparameters_dict)
+    embedding_train = tsne.fit(X)  # Try Xsmall if it crashes due to memory issues
+    print('finished training')
 
+    # Saving trained tSNE object
     print("Try to pickle")
     save_pickle(embedding_train, model_cache_path)
-    print(f"Saved fitted TSNE embedding to {model_cache_path}")
+    print(f"Saved fitted tSNE embedding to {model_cache_path}")
+    model_cache_path_zip = model_cache_path + ".zip"
+    with ZipFile(model_cache_path_zip, "w") as zipf:
+        zipf.write(model_cache_path)
+    print(f"Saved fitted tSNE embedding as zip file to {model_cache_path_zip}")
     return embedding_train
 
 
@@ -146,10 +176,10 @@ def main():
     ensure_dirs()
 
     # 1) Load training set -> boolean array (subset) with caching
-    Xsmall = load_training_space()
+    X = load_fingerprints()
 
     # 2) Fit (or load) TSNE model
-    embedding_train = fit_tsne_model(Xsmall)
+    embedding_train = fit_tsne_model(X)
 
     # 3) Load target dataset fingerprints (bool) with caching
     target_space_fingerprints = load_target_space()
