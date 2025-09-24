@@ -13,30 +13,37 @@ from rdkit.Chem.MolStandardize import rdMolStandardize
 # Data and model loading
 # -----------------------------
 # Do we really need this function actually? It is just a few lines of code.
-def load_training_space(csv_path="input_data/kerstin_fingerprints.csv",
-                        cache_path="temp/Xsmall_bool.npy",
-                        use_subset=True, subset_n=6000):
+def load_fingerprints(fingerprints_file="kerstin_fingerprints.csv",
+                        cache_path="X_bool.npy",
+                        use_subset=False, subset_n=6000):
     """
     Loads the von Borries training fingerprints, converts to bool,
     optionally subsets, and caches the boolean array.
     """
+    # Create os-independent file paths
+    fingerprints_file = os.path.join("..", "data", fingerprints_file)
+    cache_path = os.path.join("..", "data", cache_path)
+
     if os.path.exists(cache_path):
-        Xsmall = np.load(cache_path, allow_pickle=False)
-        print(f"[cache] Loaded training array from {cache_path} with shape {Xsmall.shape}")
-        return Xsmall
+        X = np.load(cache_path, allow_pickle=False)
+        print(f"[cache] Loaded training array from {cache_path} with shape {X.shape}")
+        return X
 
-    von_borries_space = pd.read_csv(csv_path)
-    print(von_borries_space.isna().sum())
-    print(von_borries_space.shape)
+    # load fingerprints
+    fingerprints = pd.read_csv(fingerprints_file)
 
-    X = np.array(von_borries_space.astype('bool'))
-    Xsmall = X[:subset_n] if use_subset else X
-    print(Xsmall)
+    # ensure that there is not NA in the data
+    assert fingerprints.isna().sum().sum() == 0, "There are NaNs in the data"
+    print("Loaded fingerprints data size:", fingerprints.shape)
 
-    np.save(cache_path, Xsmall, allow_pickle=False)
+    # obtain training data
+    X = np.array(fingerprints).astype('bool')  # full data
+    X = X[:subset_n] if use_subset else X
+    print("Size of X:", X.size)
+
+    np.save(cache_path, X, allow_pickle=False)
     print(f"[cache] Saved training array to {cache_path}")
-    return Xsmall
-
+    return X
 
 # -----------------------------
 # Structures and features
