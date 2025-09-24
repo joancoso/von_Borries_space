@@ -8,7 +8,7 @@ decorator==5.2.1
 executing==2.2.0
 fonttools==4.59.0
 ipykernel==6.29.5
-ipython==9.4.0
+# ipython==9.4.0 # renju couldnt install it
 ipython_pygments_lexers==1.1.1
 jedi==0.19.2
 joblib==1.5.1
