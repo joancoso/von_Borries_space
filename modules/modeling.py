@@ -5,6 +5,8 @@ import pandas as pd
 from openTSNE.tsne import TSNE
 import matplotlib.pyplot as plt
 import seaborn as sns
+from preprocessing import *
+from zipfile import ZipFile
 
 ### Some comments:
 # - Xsmall is just a smaller subset of the training data to make some steps faster
@@ -89,6 +91,10 @@ def fit_tsne_model(X, model_cache_path="open_tsne_trained.pkl"):
     print("Try to pickle")
     save_pickle(embedding_train, model_cache_path)
     print(f"Saved fitted tSNE embedding to {model_cache_path}")
+    model_cache_path_zip = model_cache_path + ".zip"
+    with ZipFile(model_cache_path_zip, "w") as zipf:
+        zipf.write(model_cache_path)
+    print(f"Saved fitted tSNE embedding as zip file to {model_cache_path_zip}")
     return embedding_train
 
 
