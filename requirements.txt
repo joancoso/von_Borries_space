@@ -14,7 +14,7 @@ jedi==0.19.2
 joblib==1.5.1
 jupyter_client==8.6.3
 jupyter_core==5.8.1
-jupyter-server-prox==4.4.0
+jupyter-server-proxy==4.4.0
 kiwisolver==1.4.8
 llvmlite==0.44.0
 matplotlib==3.10.3
