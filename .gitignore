@@ -1,5 +1,6 @@
 backup_old_files/
 .venv/
+venv/
 temp/
 .idea/
 *.npy
@@ -7,3 +8,4 @@ temp/
 modules/__pycache__/
 ZeroPMDB/
 output/*.pkl
+__pycache__

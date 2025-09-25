@@ -1,0 +1,31 @@
+hyperparameters:
+        n_components: 2
+        perplexity: 100  # default is 30
+        learning_rate: auto
+        early_exaggeration_iter: 250
+        early_exaggeration: 'auto'
+        n_iter: 2000  # Default is 500
+        exaggeration:  # None
+        dof: 1
+        theta: 0.5
+        n_interpolation_points: 3
+        min_num_intervals: 50
+        ints_in_interval: 1
+        initialization: "pca"
+        metric: "jaccard"  # default is euclidean
+        metric_params:  # None
+        initial_momentum: 0.8
+        final_momentum: 0.8
+        max_grad_norm:  # None
+        max_step_norm: 5
+        n_jobs: -2 # set to -1 to use all cores, -2 to all cores except 1
+        neighbors: 'pynndescent'  # the default is auto
+        negative_gradient_method: 'auto'
+        callbacks: # None
+        callbacks_every_iters: 50
+        verbose: True
+        random_state: 42
+
+    # Comment by José: These are the settings I usually use (Kerstin) - parameters we might want to review in particular: perplexity, n_iter (both during fitting and transforming)
+    # tsne = TSNE(n_components=2, perplexity=100, n_iter=2000, learning_rate='auto', neighbors='pynndescent',
+    #         initialization='pca', metric='jaccard', random_state=42, verbose=3)

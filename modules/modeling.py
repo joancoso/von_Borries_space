@@ -3,10 +3,13 @@ import pickle
 import numpy as np
 import pandas as pd
 from openTSNE.tsne import TSNE
+# from openTSNE.sklearn import TSNE
 import matplotlib.pyplot as plt
 import seaborn as sns
-from preprocessing import *
+from modules.preprocessing import *
 from zipfile import ZipFile
+import yaml
+
 
 ### Some comments:
 # - Xsmall is just a smaller subset of the training data to make some steps faster
@@ -19,8 +22,8 @@ from zipfile import ZipFile
 # utils? 
 # -----------------------------
 def ensure_dirs():
-    os.makedirs("temp", exist_ok=True)
-    os.makedirs("output", exist_ok=True)
+    os.makedirs(os.path.join("..", "temp"), exist_ok=True)
+    os.makedirs(os.path.join("..", "output"), exist_ok=True)
 
 
 def save_pickle(obj, path):
@@ -32,72 +35,78 @@ def load_pickle(path):
     with open(path, "rb") as f:
         return pickle.load(f)
     
+def load_configs(params = 'tsne_params'):
+    """
+    Load tSNE configurations from the config folder
+    :param params: name of file in config folder (without the .yaml)
+    :return: dictionary of hyperparameters to be used for tSNE training
+    """
+    with open(os.path.join('..', 'config', params+'.yaml'), 'r') as file:
+        hyperparameters = yaml.safe_load(file)
+    return hyperparameters['hyperparameters']
 
 # -----------------------------
 # Modeling
 # -----------------------------
 
 
-def fit_tsne_model(X, model_cache_path="open_tsne_trained.pkl"):
+def fit_tsne_model(X):
     """
     Fits the TSNE model on the boolean fingerprint array (X) and saves the fitted embedding object.
-    If the pickled object extists, it is loaded instead of training again.
+    If the pickled object exists, it is loaded instead of training again.
+    :param X: input matrix of fingerprints
+    :return: fitted model object and coordinates of transformed fingerprints
     """
-    model_cache_path = os.path.join("..", "output", model_cache_path)
 
-    # @TODO: I would prefer to store all params in a config file
-    # Define hyperparameters of t-SNE
-    hyperparameters_dict = {
-        'n_components': 2,
-        'perplexity': 100,  # default is 30
-        'learning_rate': 'auto',
-        'early_exaggeration_iter': 250,
-        'early_exaggeration': 'auto',
-        'n_iter': 2000,  # Default is 500
-        'exaggeration': None,
-        'dof': 1,
-        'theta': 0.5,
-        'n_interpolation_points': 3,
-        'min_num_intervals': 50,
-        'ints_in_interval': 1,
-        'initialization': "pca",
-        'metric': "jaccard",  # deafult is euclidean
-        'metric_params': None,
-        'initial_momentum': 0.8,
-        'final_momentum': 0.8,
-        'max_grad_norm': None,
-        'max_step_norm': 5,
-        'n_jobs': 1,
-        'neighbors': 'auto',  # the default is auto
-        'negative_gradient_method': 'auto',
-        'callbacks': None,
-        'callbacks_every_iters': 50,
-        'random_state': None,
-        'verbose': True,
-        'random_state': 42,
-    }
-
-    # These are the settings I usually use (Kerstin) - parameters we might want to review in particular: perplexity, n_iter (both during fitting and transforming)
-    # tsne = TSNE(n_components=2, perplexity=100, n_iter=2000, learning_rate='auto', neighbors='pynndescent',
-    #         initialization='pca', metric='jaccard', random_state=42, verbose=3)
+    # Load hyperparameters of t-SNE from config
+    hyperparameters_dict = load_configs('tsne_params')
 
     # Training
-    print('start training')
+    print('--> Start training')
     tsne = TSNE(**hyperparameters_dict)
-    embedding_train = tsne.fit(X)  # Try Xsmall if it crashes due to memory issues
-    print('finished training')
+    model = tsne.fit(X)
+    coordinates = pd.DataFrame(model.transform(X))
+    # coordinates, model = tsne.fit_transform(X)
+    print('Finished training')
+    return model, coordinates
 
-    # Saving trained tSNE object
-    print("Try to pickle")
-    save_pickle(embedding_train, model_cache_path)
-    print(f"Saved fitted tSNE embedding to {model_cache_path}")
-    model_cache_path_zip = model_cache_path + ".zip"
-    with ZipFile(model_cache_path_zip, "w") as zipf:
-        zipf.write(model_cache_path)
-    print(f"Saved fitted tSNE embedding as zip file to {model_cache_path_zip}")
-    return embedding_train
+def save_model(model, filename):
+    """
+    Save model as pickle to temp and as zipped pickle to output
+    @param model: trained tSNE model
+    @param filename:
+    """
+    ensure_dirs()
+    model_path = os.path.join("..", "temp", filename + '_trained_tSNE.pkl')
+    model_path_zip = os.path.join("..", "output", filename + '_trained_tSNE.zip')
 
+    # Saving trained tSNE object to temp folder
+    print("--> Pickle tSNE object")
+    save_pickle(model, model_path)
+    print(f"Saved fitted tSNE embedding to {model_path}")
 
+    # Saving zipped trained tSNE object to output folder
+    print('--> Zip tSNE object')
+    with ZipFile(model_path_zip, "w") as zipf:
+        zipf.write(model_path)
+    print(f"Saved fitted tSNE embedding as zip file to {model_path_zip}")
+
+def save_coordinates(coordinates, filename, inchikeys = None):
+    coordinates_path = os.path.join("..", "temp", filename + '_coordinates_tSNE.csv')
+    coordinates.columns = ['TSNE1', 'TSNE2']
+    if inchikeys:
+        coordinates.index = inchikeys
+    coordinates.to_csv("df_tsne_sklearn.csv", index=True)
+
+def load_model(filename, from_zip = False):
+    if from_zip:
+        model_path_zip = os.path.join("..", "output", filename + '_trained_tSNE.zip')
+        model = None
+        raise NotImplementedError
+    else:
+        model_path = os.path.join("..", "temp", filename + '_trained_tSNE.pkl')
+        model = load_pickle(model_path)
+    return model
 # -----------------------------
 # Modeling (for the target space)
 # -----------------------------
@@ -146,6 +155,10 @@ def transform_target(embedding_train,
     print(target_chemicals_space)
     return embedding_target_chemicals, target_chemicals_space
 
+def transform_target(model, target_X):
+    coordinates_target = model.transform(target_X)
+    coordinates_df = pd.DataFrame(coordinates_target, columns=['tsne_v1', 'tsne_v2'])
+    return coordinates_df
 
 # -----------------------------
 # Visualization
@@ -176,10 +189,10 @@ def main():
     ensure_dirs()
 
     # 1) Load training set -> boolean array (subset) with caching
-    X = load_fingerprints()
+    X = load_training_array()
 
     # 2) Fit (or load) TSNE model
-    embedding_train = fit_tsne_model(X)
+    embedding_train, _ = fit_tsne_model(X) # _ catches the coordinates
 
     # 3) Load target dataset fingerprints (bool) with caching
     target_space_fingerprints = load_target_space()

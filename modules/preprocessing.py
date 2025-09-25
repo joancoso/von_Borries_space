@@ -12,24 +12,13 @@ from rdkit.Chem.MolStandardize import rdMolStandardize
 # -----------------------------
 # Data and model loading
 # -----------------------------
-# Do we really need this function actually? It is just a few lines of code.
-def load_fingerprints(fingerprints_file="kerstin_fingerprints.csv",
-                        cache_path="X_bool.npy",
-                        use_subset=False, subset_n=6000):
+def load_training_array(filename, use_subset=False, subset_n=6000):
     """
     Loads the von Borries training fingerprints, converts to bool,
     optionally subsets, and caches the boolean array.
     """
-    # Create os-independent file paths
-    fingerprints_file = os.path.join("..", "data", fingerprints_file)
-    cache_path = os.path.join("..", "data", cache_path)
-
-    if os.path.exists(cache_path):
-        X = np.load(cache_path, allow_pickle=False)
-        print(f"[cache] Loaded training array from {cache_path} with shape {X.shape}")
-        return X
-
     # load fingerprints
+    fingerprints_file = os.path.join("..", "output", filename + '_fingerprints.csv')
     fingerprints = pd.read_csv(fingerprints_file)
 
     # ensure that there is not NA in the data
@@ -39,11 +28,26 @@ def load_fingerprints(fingerprints_file="kerstin_fingerprints.csv",
     # obtain training data
     X = np.array(fingerprints).astype('bool')  # full data
     X = X[:subset_n] if use_subset else X
-    print("Size of X:", X.size)
+    print("Size of training array:", X.size)
 
-    np.save(cache_path, X, allow_pickle=False)
-    print(f"[cache] Saved training array to {cache_path}")
     return X
+
+def preprocess_data(filename):
+    input_df_path = os.path.join("..", "data", filename + ".csv")
+    df = pd.read_csv(input_df_path)
+    df['standardized SMILES'] = standardize_smiles_df(df, 'SMILES')
+    df_fingerprints = pd.DataFrame(calculate_descriptors_morgan_df(df, 'standardized SMILES'))
+    return df_fingerprints
+
+def save_fingerprints(fingerprints, filename):
+    fingerprints_df_path = os.path.join("..", "output", filename + "_fingerprints.csv")
+    fingerprints.to_csv(fingerprints_df_path)
+    print("Fingerprints saved to ", fingerprints_df_path)
+
+def load_fingerprints(filename):
+    fingerprints_df_path = os.path.join("..", "output", filename + "_fingerprints.csv")
+    fingerprints = pd.read_csv(fingerprints_df_path)
+    return fingerprints
 
 # -----------------------------
 # Structures and features
