@@ -1,0 +1,7 @@
+Renku CHANGELOG
+
+# Requirements
+added: jupyter-server-proxy
+downgraded: scipy==1.6.0 -> scipy==1.15.3
+removed: ipython
+
