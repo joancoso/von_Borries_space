@@ -18,7 +18,7 @@ hyperparameters:
         final_momentum: 0.8
         max_grad_norm:  # None
         max_step_norm: 5
-        n_jobs: -2 # set to -1 to use all cores, -2 to all cores except 1
+        n_jobs: -1 # set to -1 to use all cores
         neighbors: 'pynndescent'  # the default is auto
         negative_gradient_method: 'auto'
         callbacks: # None

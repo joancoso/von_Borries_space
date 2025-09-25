@@ -14,8 +14,9 @@ from rdkit.Chem.MolStandardize import rdMolStandardize
 # -----------------------------
 def load_training_array(filename, use_subset=False, subset_n=6000):
     """
-    Loads the von Borries training fingerprints, converts to bool,
+    Loads the von Borries training fingerprints, converts to boolean,
     optionally subsets, and caches the boolean array.
+
     """
     # load fingerprints
     fingerprints_file = os.path.join("..", "output", filename + '_fingerprints.csv')
@@ -33,6 +34,11 @@ def load_training_array(filename, use_subset=False, subset_n=6000):
     return X
 
 def preprocess_data(filename):
+    """
+    Wrapper function to load dataframe, standardize SMILES, and calculate fingerprints
+    :param filename: name tag
+    :return: pandas DataFrame of fingerprints
+    """
     input_df_path = os.path.join("..", "data", filename + ".csv")
     df = pd.read_csv(input_df_path)
     df['standardized SMILES'] = standardize_smiles_df(df, 'SMILES')
@@ -40,11 +46,21 @@ def preprocess_data(filename):
     return df_fingerprints
 
 def save_fingerprints(fingerprints, filename):
+    """
+    Save fingerprints to .csv file
+    :param fingerprints: fingerprints dataframe
+    :param filename: name tag
+    """
     fingerprints_df_path = os.path.join("..", "output", filename + "_fingerprints.csv")
     fingerprints.to_csv(fingerprints_df_path)
     print("Fingerprints saved to ", fingerprints_df_path)
 
 def load_fingerprints(filename):
+    """
+
+    :param filename:
+    :return:
+    """
     fingerprints_df_path = os.path.join("..", "output", filename + "_fingerprints.csv")
     fingerprints = pd.read_csv(fingerprints_df_path)
     return fingerprints
